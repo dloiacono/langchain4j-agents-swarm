@@ -2,6 +2,7 @@ package com.github.dloiacono.ai.agents.product;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
 public interface Analyst
@@ -14,10 +15,12 @@ public interface Analyst
             and any other relevant information.
             You must save the REQUIREMENTS.MD file in the current system directory as input.
             You must keep the REQUIREMENTS.MD file up to date even when you will have more interactions.
+            You must adapt the existing REQUIREMENTS.MD with the new feature.
             You must use tools to write, read and create files.
             You must user tools to read entire project files as context.            
             
             IMPORTANT: Create REQUIREMENTS.MD file containing your results.
             """)
-    void analyzeFeature(@V("feature") String feature);
+    @UserMessage(" You must analyze the feature {{feature}} and create a feature description.")
+    String analyzeFeature(@V("feature") String feature);
 }

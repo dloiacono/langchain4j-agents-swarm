@@ -6,6 +6,7 @@ import com.github.dloiacono.ai.agents.tools.WriteFileTool;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
 
 public interface Developer {
 
@@ -30,7 +31,9 @@ public interface Developer {
             You must document everything you creates.   
             You must use tools to write, read and create files.
             You must user tools to read entire project files as context.
-            You must keep the code up to date even when you will have more interactions.                     
+            You must keep the code up to date even when you will have more interactions.  
+            You must adapt the current code with the new implmentation.                   
             """)
-    void develop();
+    @UserMessage("You must develop the feature described in ARCHITECTURE.MD file.")
+    String develop();
 }
