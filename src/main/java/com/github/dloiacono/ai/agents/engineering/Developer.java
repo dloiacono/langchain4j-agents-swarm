@@ -1,9 +1,5 @@
 package com.github.dloiacono.ai.agents.engineering;
 
-import com.github.dloiacono.ai.agents.tools.ProjectContextTool;
-import com.github.dloiacono.ai.agents.tools.ReadFileTool;
-import com.github.dloiacono.ai.agents.tools.WriteFileTool;
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;

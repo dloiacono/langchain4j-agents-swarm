@@ -20,6 +20,7 @@ public class ChatModelProvider {
                 return AnthropicChatModel.builder()
                         .apiKey(System.getenv("ANTHROPIC_API_KEY"))
                         .modelName(modelName)
+                        .maxTokens(4096)  // Increased from default 1024 to allow complete tool calls
                         .logRequests(true)
                         .logResponses(true)
                         .build();
