@@ -4,11 +4,9 @@ import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -18,26 +16,26 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class ProjectContextTool {
 
-
-
     /**
-     * Read entire project files
+     * Reads the entire content of the current directory and all its subdirectories.
+     * This method recursively walks through all files in the current working directory
+     * and returns their content as a single string.
      *
-     * @param projectPath the path to the project folder
-     * @return the content of all files in the project
+     * @return the content of all files in the current directory as a string
      */
-    @Tool("Read entire project files")
-    public String readAllProjectFiles(
-            @P("MANDATORY projectPath (string) - the RELATIVE full project path") String projectPath) {
+    @Tool("Reads the entire content of the current directory and all its subdirectories")
+    public String readCurrentDirectoryContent() {
         try {
-            Path path = Paths.get(projectPath);
+            String currentPath = System.getProperty("user.dir");
+            Path path = Paths.get(currentPath);
+            
             if (!Files.exists(path) || !Files.isDirectory(path)) {
-                return "Error: Invalid project path or not a directory: " + projectPath;
+                return "Error: Current directory is invalid or not accessible: " + currentPath;
             }
 
             StringBuilder content = new StringBuilder();
-            content.append("=== ALL PROJECT FILES CONTENT ===\n");
-            content.append("Project Path: ").append(projectPath).append("\n\n");
+            content.append("=== CURRENT DIRECTORY CONTENT ===\n");
+            content.append("Directory Path: ").append(currentPath).append("\n\n");
 
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 @Override
@@ -49,7 +47,6 @@ public class ProjectContextTool {
                     content.append("--- CONTENT ---\n");
                     
                     try {
-                        // Read file content without any size limitations
                         String fileContent = Files.readString(file);
                         content.append(fileContent);
                         if (!fileContent.endsWith("\n")) {
@@ -83,55 +80,64 @@ public class ProjectContextTool {
             return content.toString();
 
         } catch (IOException e) {
-            return "Error reading all project files: " + e.getMessage();
+            return "Error reading current directory content: " + e.getMessage();
         }
     }
 
     /**
-     * Gets the content of specific files in the project.
+     * Reads a specific file from the current directory.
+     * The file path should be relative to the current working directory.
      *
-     * @param projectPath the path to the project folder
-     * @param filePattern glob pattern to match files (e.g., "**//*.java", "pom.xml", "package.json")
-     * @return the content of matching files
+     * @param filePath the relative path to the file from the current directory
+     * @return the content of the specified file as a string
      */
-    @Tool("Gets the content of specific files in a project based on a glob pattern")
-    public String getProjectFiles(String projectPath, String filePattern) {
+    @Tool("Reads a specific file from the current directory")
+    public String readSpecificFile(@P("The relative path to the file from the current directory") String filePath) {
         try {
-            Path path = Paths.get(projectPath);
-            if (!Files.exists(path) || !Files.isDirectory(path)) {
-                return "Error: Invalid project path or not a directory: " + projectPath;
+            if (filePath == null || filePath.trim().isEmpty()) {
+                return "Error: File path cannot be null or empty";
+            }
+
+            String currentPath = System.getProperty("user.dir");
+            Path fullPath = Paths.get(currentPath, filePath);
+            
+            if (!Files.exists(fullPath)) {
+                return "Error: File not found: " + filePath;
+            }
+            
+            if (!Files.isReadable(fullPath)) {
+                return "Error: File is not readable: " + filePath;
+            }
+            
+            if (Files.isDirectory(fullPath)) {
+                return "Error: Path points to a directory, not a file: " + filePath;
             }
 
             StringBuilder content = new StringBuilder();
-            content.append("=== FILES MATCHING PATTERN: ").append(filePattern).append(" ===\n\n");
-
-            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + filePattern);
+            content.append("=== FILE: ").append(filePath).append(" ===\n");
             
-            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Path relativePath = path.relativize(file);
-                    if (matcher.matches(relativePath) || matcher.matches(file.getFileName())) {
-                        content.append("--- ").append(relativePath).append(" ---\n");
-                        try {
-                            String fileContent = Files.readString(file);
-                            content.append(fileContent).append("\n\n");
-                        } catch (IOException e) {
-                            content.append("Error reading file: ").append(e.getMessage()).append("\n\n");
-                        }
-                    }
-                    return FileVisitResult.CONTINUE;
+            BasicFileAttributes attrs = Files.readAttributes(fullPath, BasicFileAttributes.class);
+            content.append("Size: ").append(attrs.size()).append(" bytes\n");
+            content.append("Last Modified: ").append(attrs.lastModifiedTime()).append("\n");
+            content.append("--- CONTENT ---\n");
+            
+            try {
+                String fileContent = Files.readString(fullPath);
+                content.append(fileContent);
+                if (!fileContent.endsWith("\n")) {
+                    content.append("\n");
                 }
-            });
-
+            } catch (IOException e) {
+                content.append("Error reading file content: ").append(e.getMessage()).append("\n");
+            } catch (OutOfMemoryError e) {
+                content.append("File too large to read into memory\n");
+            }
+            
+            content.append("--- END OF FILE ---\n");
             return content.toString();
 
         } catch (IOException e) {
-            return "Error getting project files: " + e.getMessage();
+            return "Error reading file '" + filePath + "': " + e.getMessage();
         }
     }
-
-
-
-
 }
