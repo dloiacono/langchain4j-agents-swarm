@@ -4,7 +4,6 @@ import com.github.dloiacono.ai.agents.engineering.Architect;
 import com.github.dloiacono.ai.agents.engineering.Developer;
 import com.github.dloiacono.ai.agents.product.Analyst;
 import com.github.dloiacono.ai.agents.tools.FileSystemTool;
-import com.github.dloiacono.ai.agents.tools.ProjectContextTool;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.agentic.supervisor.SupervisorContextStrategy;
@@ -15,7 +14,6 @@ import util.log.CustomLogging;
 import util.log.LogLevels;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class AgentsTeam {
 
@@ -36,18 +34,19 @@ public class AgentsTeam {
      */
     public static void main(String[] args) throws IOException {
 
+
         // 1. Define subagents
         Analyst analyst = AgenticServices.agentBuilder(Analyst.class)
                 .chatModel(CHAT_MODEL)
-                .tools(new FileSystemTool(Path.of(".")), new ProjectContextTool())
+                .tools(new FileSystemTool())
                 .build();
         Architect architect = AgenticServices.agentBuilder(Architect.class)
                 .chatModel(CHAT_MODEL)
-                .tools(new FileSystemTool(Path.of(".")), new ProjectContextTool())
+                .tools(new FileSystemTool())
                 .build();
         Developer developer = AgenticServices.agentBuilder(Developer.class)
                 .chatModel(CHAT_MODEL)
-                .tools(new FileSystemTool(Path.of(".")), new ProjectContextTool())
+                .tools(new FileSystemTool())
                 .build();
 
         // 2. Build supervisor

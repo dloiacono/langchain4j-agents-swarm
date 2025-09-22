@@ -6,14 +6,23 @@ import dev.langchain4j.agent.tool.Tool;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FileSystemTool {
 
+    private final static String  BASE_DIR = "./target/generated-project";
     private final Path baseDir;
 
-    public FileSystemTool(Path baseDir) {
-        this.baseDir = baseDir.toAbsolutePath().normalize();
+    public FileSystemTool() {
+        this.baseDir = Paths.get(BASE_DIR).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(baseDir);
+        }  catch (IOException e) {
+            throw new RuntimeException("Failed to create base directory: " + baseDir, e);
+        }
     }
 
     // Helper to resolve relative paths safely
@@ -57,6 +66,20 @@ public class FileSystemTool {
             return "Content appended successfully: " + relativePath;
         } catch (IOException e) {
             return "Error appending to file: " + e.getMessage();
+        }
+    }
+
+    @Tool("Lists the entire content of the project folder as a tree structure")
+    public String listProjectFiles() {
+        try (Stream<Path> paths = Files.walk(baseDir)) {
+            return paths
+                    .map(baseDir::relativize)     // relative paths
+                    .map(Path::toString)
+                    .filter(p -> !p.isEmpty())    // skip "."
+                    .sorted()
+                    .collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            return "Error listing project files: " + e.getMessage();
         }
     }
 }
