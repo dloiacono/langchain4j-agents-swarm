@@ -3,6 +3,8 @@ package util;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 
+import java.time.Duration;
+
 
 public class ChatModelProvider {
     
@@ -23,6 +25,7 @@ public class ChatModelProvider {
                         .maxTokens(4096)  // Increased from default 1024 to allow complete tool calls
                         .logRequests(true)
                         .logResponses(true)
+                        .timeout(Duration.ofMinutes(5))
                         .build();
                 default:
                     throw new IllegalArgumentException("Unknown provider: " + provider);

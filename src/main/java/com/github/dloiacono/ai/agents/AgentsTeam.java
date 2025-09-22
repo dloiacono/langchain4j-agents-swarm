@@ -21,7 +21,8 @@ public class AgentsTeam {
         CustomLogging.setLevel(LogLevels.PRETTY, 200);
     }
 
-    private static final ChatModel CHAT_MODEL = ChatModelProvider.createDefaultChatModel();
+    private static final ChatModel CHAT_MODEL = ChatModelProvider
+            .createDefaultChatModel();
 
     /**
      * In this example we build a similar supervisor as in _7a_Supervisor_Orchestration,

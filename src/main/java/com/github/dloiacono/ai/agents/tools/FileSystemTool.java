@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 public class FileSystemTool {
 
-    private final static String  BASE_DIR = "./target/generated-project";
+    private final static String  BASE_DIR = "./generated-project";
     private final Path baseDir;
 
     public FileSystemTool() {
@@ -72,12 +72,15 @@ public class FileSystemTool {
     @Tool("Lists the entire content of the project folder as a tree structure")
     public String listProjectFiles() {
         try (Stream<Path> paths = Files.walk(baseDir)) {
-            return paths
+            String result = paths
                     .map(baseDir::relativize)     // relative paths
                     .map(Path::toString)
                     .filter(p -> !p.isEmpty())    // skip "."
                     .sorted()
                     .collect(Collectors.joining("\n"));
+            
+            // Return a meaningful message if the folder is empty
+            return result.isEmpty() ? "The project folder is empty." : result;
         } catch (IOException e) {
             return "Error listing project files: " + e.getMessage();
         }
