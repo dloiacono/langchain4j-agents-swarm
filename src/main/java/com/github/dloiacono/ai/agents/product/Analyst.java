@@ -20,6 +20,7 @@ public interface Analyst
             You must user tools to read entire project files as context.            
             
             IMPORTANT: Create REQUIREMENTS.MD file containing your results.
+            IMPORTANT: Start reading the current project folder content to evaluate the current status.
             """)
     @UserMessage(" You must analyze the feature {{feature}} and create a feature description.")
     String analyzeFeature(@V("feature") String feature);

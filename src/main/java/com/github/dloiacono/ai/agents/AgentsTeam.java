@@ -4,6 +4,7 @@ import com.github.dloiacono.ai.agents.engineering.Architect;
 import com.github.dloiacono.ai.agents.engineering.Developer;
 import com.github.dloiacono.ai.agents.product.Analyst;
 import com.github.dloiacono.ai.agents.tools.FileSystemTool;
+import com.github.dloiacono.ai.agents.tools.MavenTool;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.agentic.supervisor.SupervisorContextStrategy;
@@ -47,7 +48,7 @@ public class AgentsTeam {
                 .build();
         Developer developer = AgenticServices.agentBuilder(Developer.class)
                 .chatModel(CHAT_MODEL)
-                .tools(new FileSystemTool())
+                .tools(new FileSystemTool(), new MavenTool())
                 .build();
 
         // 2. Build supervisor

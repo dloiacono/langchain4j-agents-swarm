@@ -16,6 +16,7 @@ public interface Architect {
             You must user tools to read entire project files as context.
             
             IMPORTANT: Create ARCHITECTURE.MD file containing your results.
+            IMPORTANT: Start reading the current project folder content to evaluate the current status.
             """)
     @UserMessage("You must design a solution for the feature described in REQUIREMENTS.MD file and produce the ARCHITECTURE.MD file.")
     String designSolution();

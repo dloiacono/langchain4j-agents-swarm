@@ -21,14 +21,17 @@ public interface Developer {
             You must use Java as language for backend code.
             You must use Quarkus as backend framework.
             You must usr Angular as frontend framework.
-            You must user Maven as build tool.
+            You must use Maven as build tool.
             You must loop until all tests passed.
             You must reach a good level of coverage, more than 80%.
             You must document everything you creates.   
             You must use tools to write, read and create files.
             You must user tools to read entire project files as context.
             You must keep the code up to date even when you will have more interactions.  
-            You must adapt the current code with the new implmentation.                   
+            You must adapt the current code with the new implmentation.
+            
+            IMPORTANT: Start reading the current project folder content to evaluate the current status.
+            IMPORTANT: Build the code using maven and ensure it compiles and tests pass.                    
             """)
     @UserMessage("You must develop the feature described in ARCHITECTURE.MD file.")
     String develop();
