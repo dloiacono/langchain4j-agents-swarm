@@ -3,8 +3,10 @@ package com.github.dloiacono.ai.agents.tools;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -36,9 +38,16 @@ public class FileSystemTool {
 
     @Tool("Reads the content of a file (path is relative to the current folder)")
     public String readFile(@P("The relative path to the file to read") String relativePath) {
+
         try {
-            return Files.readString(resolve(relativePath));
-        } catch (IOException e) {
+            Path  filePath = resolve(relativePath);
+            if (Files.size(filePath) == 0) {
+                return "The file is empty";
+            }
+            return Files.readString(filePath);
+        } catch (FileNotFoundException | NoSuchFileException e) {
+            return "No file " + relativePath + " found";
+        } catch (Exception e) {
             return "Error reading file: " + e.getMessage();
         }
     }
@@ -47,7 +56,10 @@ public class FileSystemTool {
     public String writeFile(@P("The relative path to the file to write") String relativePath, 
                            @P("The content to write to the file") String content) {
         try {
-            Files.writeString(resolve(relativePath), content,
+            if (null == content ) content = "";
+            Path path = resolve(relativePath);
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, content,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
             return "File written successfully: " + relativePath;
@@ -69,18 +81,37 @@ public class FileSystemTool {
         }
     }
 
-    @Tool("Lists the entire content of the project folder as a tree structure")
+    @Tool("Lists the entire content of the project folder as a tree structure with file contents")
     public String listProjectFiles() {
         try (Stream<Path> paths = Files.walk(baseDir)) {
-            String result = paths
-                    .map(baseDir::relativize)     // relative paths
-                    .map(Path::toString)
-                    .filter(p -> !p.isEmpty())    // skip "."
-                    .sorted()
-                    .collect(Collectors.joining("\n"));
+            StringBuilder result = new StringBuilder();
+            
+            paths
+                .filter(path -> !path.equals(baseDir)) // skip base directory itself
+                .sorted()
+                .forEach(path -> {
+                    String relativePath = baseDir.relativize(path).toString();
+                    result.append("=== ").append(relativePath).append(" ===\n");
+                    
+                    if (Files.isDirectory(path)) {
+                        result.append("[DIRECTORY]\n");
+                    } else {
+                        try {
+                            String content = Files.readString(path);
+                            if (content.trim().isEmpty()) {
+                                result.append("[EMPTY FILE]\n");
+                            } else {
+                                result.append(content).append("\n");
+                            }
+                        } catch (IOException e) {
+                            result.append("[ERROR READING FILE: ").append(e.getMessage()).append("]\n");
+                        }
+                    }
+                    result.append("\n");
+                });
             
             // Return a meaningful message if the folder is empty
-            return result.isEmpty() ? "The project folder is empty." : result;
+            return result.length() == 0 ? "The project folder is empty." : result.toString();
         } catch (IOException e) {
             return "Error listing project files: " + e.getMessage();
         }
