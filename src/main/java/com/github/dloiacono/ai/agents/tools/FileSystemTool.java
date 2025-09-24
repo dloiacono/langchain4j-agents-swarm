@@ -1,5 +1,6 @@
 package com.github.dloiacono.ai.agents.tools;
 
+import com.github.dloiacono.ai.agents.rag.SimpleRAGStore;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 
@@ -137,6 +138,21 @@ public class FileSystemTool {
         }
         return resolved;
     }
+    
+    // Helper method to determine the current agent ID for indexing purposes
+    private String getCurrentAgentId() {
+        // Try to determine agent ID from thread name or other context
+        String threadName = Thread.currentThread().getName();
+        if (threadName.toLowerCase().contains("analyst")) {
+            return "analyst";
+        } else if (threadName.toLowerCase().contains("architect")) {
+            return "architect";
+        } else if (threadName.toLowerCase().contains("developer")) {
+            return "developer";
+        }
+        // Default to "unknown" if we can't determine the agent
+        return "unknown";
+    }
 
     @Tool("Reads the content of a file (path is relative to the current folder)")
     public String readFile(@P("The relative path to the file to read") String relativePath) {
@@ -165,6 +181,15 @@ public class FileSystemTool {
             Files.writeString(path, content,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
+            
+            // Automatically index the file for RAG functionality
+            try {
+                SimpleRAGStore.indexFile(path, getCurrentAgentId());
+            } catch (Exception e) {
+                // Log but don't fail the write operation if indexing fails
+                System.err.println("Warning: Failed to index file " + relativePath + " for RAG: " + e.getMessage());
+            }
+            
             return "File written successfully: " + relativePath;
         } catch (IOException e) {
             return "Error writing file: " + e.getMessage();
@@ -175,9 +200,19 @@ public class FileSystemTool {
     public String appendToFile(@P("The relative path to the file to append to") String relativePath, 
                               @P("The content to append to the file") String content) {
         try {
-            Files.writeString(resolve(relativePath), content,
+            Path path = resolve(relativePath);
+            Files.writeString(path, content,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND);
+            
+            // Automatically index the file for RAG functionality
+            try {
+                SimpleRAGStore.indexFile(path, getCurrentAgentId());
+            } catch (Exception e) {
+                // Log but don't fail the append operation if indexing fails
+                System.err.println("Warning: Failed to index file " + relativePath + " for RAG: " + e.getMessage());
+            }
+            
             return "Content appended successfully: " + relativePath;
         } catch (IOException e) {
             return "Error appending to file: " + e.getMessage();

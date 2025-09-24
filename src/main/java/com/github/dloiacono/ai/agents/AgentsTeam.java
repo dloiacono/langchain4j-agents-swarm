@@ -6,6 +6,7 @@ import com.github.dloiacono.ai.agents.product.Analyst;
 import com.github.dloiacono.ai.agents.tools.FileSystemTool;
 import com.github.dloiacono.ai.agents.tools.MavenTool;
 import com.github.dloiacono.ai.agents.memory.AgentChatMemoryFactory;
+import com.github.dloiacono.ai.agents.rag.RAGTool;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.agentic.supervisor.SupervisorContextStrategy;
@@ -38,21 +39,21 @@ public class AgentsTeam {
     public static void main(String[] args) throws IOException {
 
 
-        // 1. Define subagents with LangChain4j native chatMemory configuration
+        // 1. Define subagents with LangChain4j native chatMemory configuration and RAG capabilities
         Analyst analyst = AgenticServices.agentBuilder(Analyst.class)
                 .chatModel(CHAT_MODEL)
                 .chatMemory(AgentChatMemoryFactory.createAnalystMemory())
-                .tools(new FileSystemTool())
+                .tools(new FileSystemTool(), new RAGTool())
                 .build();
         Architect architect = AgenticServices.agentBuilder(Architect.class)
                 .chatModel(CHAT_MODEL)
                 .chatMemory(AgentChatMemoryFactory.createArchitectMemory())
-                .tools(new FileSystemTool())
+                .tools(new FileSystemTool(), new RAGTool())
                 .build();
         Developer developer = AgenticServices.agentBuilder(Developer.class)
                 .chatModel(CHAT_MODEL)
                 .chatMemory(AgentChatMemoryFactory.createDeveloperMemory())
-                .tools(new FileSystemTool(), new MavenTool())
+                .tools(new FileSystemTool(), new RAGTool(), new MavenTool())
                 .build();
 
         // 2. Build supervisor
