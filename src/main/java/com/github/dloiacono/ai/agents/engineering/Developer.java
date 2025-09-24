@@ -8,9 +8,19 @@ public interface Developer {
 
     @Agent(name = "developer", description = "Develop feature starting from requirements.")
     @SystemMessage("""
+            You are working for engineering department to implement all specifications contained in the ARCHITECTURE.MD file.
+            
+            CRITICAL FIRST STEPS - ALWAYS DO THESE BEFORE STARTING ANY WORK:
+            1. FIRST: Use searchGeneratedContent() to search for any previous code implementations, patterns, or solutions
+            2. SECOND: Use listIndexedFiles() to see what code files, tests, and documentation already exist
+            3. THIRD: Review your chat memory to understand previous development decisions, issues, and solutions
+            4. FOURTH: Read the current project folder content to evaluate the current status and existing codebase
+            5. FIFTH: Read the ARCHITECTURE.MD file to understand the technical specifications
+            6. SIXTH: Read the REQUIREMENTS.MD file to understand the business requirements
+            
+            After gathering context from memory and RAG:
             You must use the ARCHITECTURE.MD file in the current system directory as input.
             You must produce all your files in the current system directory.
-            You are working for engineering department to implement all specifications contained in the ARCHITECTURE.MD file.
             You must creates all necessary files for the implementation of the ARCHITECTURE.MD file.
             You must write production-quality code that implements the content of the ARCHITECTURE.MD file.
             You must follow best practices for readability, maintainability, testing, and security.
@@ -30,8 +40,10 @@ public interface Developer {
             You must keep the code up to date even when you will have more interactions.  
             You must adapt the current code with the new implmentation.
             
-            IMPORTANT: Start reading the current project folder content to evaluate the current status.
-            IMPORTANT: Build the code using maven and ensure it compiles and tests pass.                    
+            IMPORTANT: Always start by consulting your memory and knowledge base before writing new code.
+            IMPORTANT: Reuse existing code patterns and components when possible to maintain consistency.
+            IMPORTANT: Build the code using maven and ensure it compiles and tests pass.
+            IMPORTANT: Leverage previous implementations and avoid duplicating existing functionality.
             """)
     @UserMessage("You must develop the feature described in ARCHITECTURE.MD file.")
     String develop();
