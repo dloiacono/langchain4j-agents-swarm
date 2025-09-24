@@ -10,6 +10,9 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,6 +20,7 @@ public class FileSystemTool {
 
     private final static String  BASE_DIR = "./generated-project";
     private final Path baseDir;
+    private final List<Pattern> gitignorePatterns;
 
     public FileSystemTool() {
         this.baseDir = Paths.get(BASE_DIR).toAbsolutePath().normalize();
@@ -25,6 +29,104 @@ public class FileSystemTool {
         }  catch (IOException e) {
             throw new RuntimeException("Failed to create base directory: " + baseDir, e);
         }
+        // Load gitignore patterns once during construction
+        this.gitignorePatterns = loadGitignorePatterns();
+    }
+
+    // Helper method to load gitignore patterns
+    private List<Pattern> loadGitignorePatterns() {
+        List<Pattern> patterns = new ArrayList<>();
+        Path gitignoreFile = baseDir.resolve(".gitignore");
+        
+        if (Files.exists(gitignoreFile)) {
+            try {
+                List<String> lines = Files.readAllLines(gitignoreFile);
+                for (String line : lines) {
+                    line = line.trim();
+                    // Skip empty lines and comments
+                    if (!line.isEmpty() && !line.startsWith("#")) {
+                        patterns.add(gitignorePatternToRegex(line));
+                    }
+                }
+            } catch (IOException e) {
+                // If we can't read .gitignore, continue without filtering
+            }
+        }
+        
+        return patterns;
+    }
+
+    // Convert gitignore pattern to regex pattern
+    private Pattern gitignorePatternToRegex(String gitignorePattern) {
+        StringBuilder regex = new StringBuilder();
+        
+        // Handle directory patterns (ending with /)
+        boolean isDirectory = gitignorePattern.endsWith("/");
+        if (isDirectory) {
+            gitignorePattern = gitignorePattern.substring(0, gitignorePattern.length() - 1);
+        }
+        
+        // Handle patterns starting with /
+        boolean isAbsolute = gitignorePattern.startsWith("/");
+        if (isAbsolute) {
+            gitignorePattern = gitignorePattern.substring(1);
+            regex.append("^");
+        }
+        
+        // Convert gitignore wildcards to regex
+        for (int i = 0; i < gitignorePattern.length(); i++) {
+            char c = gitignorePattern.charAt(i);
+            switch (c) {
+                case '*':
+                    if (i + 1 < gitignorePattern.length() && gitignorePattern.charAt(i + 1) == '*') {
+                        // ** matches any number of directories
+                        regex.append(".*");
+                        i++; // skip next *
+                    } else {
+                        // * matches anything except /
+                        regex.append("[^/]*");
+                    }
+                    break;
+                case '?':
+                    regex.append("[^/]");
+                    break;
+                case '.':
+                case '(':
+                case ')':
+                case '+':
+                case '{':
+                case '}':
+                case '^':
+                case '$':
+                case '|':
+                case '\\':
+                    regex.append("\\").append(c);
+                    break;
+                default:
+                    regex.append(c);
+            }
+        }
+        
+        if (isDirectory) {
+            regex.append("(/.*)?$");
+        } else if (!isAbsolute) {
+            regex.insert(0, "(^|.*/)");
+            regex.append("(/.*)?$");
+        } else {
+            regex.append("(/.*)?$");
+        }
+        
+        return Pattern.compile(regex.toString());
+    }
+
+    // Check if a path should be ignored based on gitignore patterns
+    private boolean shouldIgnore(String relativePath, List<Pattern> gitignorePatterns) {
+        for (Pattern pattern : gitignorePatterns) {
+            if (pattern.matcher(relativePath).matches()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Helper to resolve relative paths safely
@@ -56,7 +158,8 @@ public class FileSystemTool {
     public String writeFile(@P("The relative path to the file to write") String relativePath, 
                            @P("The content to write to the file") String content) {
         try {
-            if (null == content ) content = "";
+            if (null == content || content.isEmpty())
+                return  "Content is empty. No write operation performed.";
             Path path = resolve(relativePath);
             Files.createDirectories(path.getParent());
             Files.writeString(path, content,
@@ -81,13 +184,17 @@ public class FileSystemTool {
         }
     }
 
-    @Tool("Lists the entire content of the project folder as a tree structure with file contents")
+    @Tool("Lists the entire content of the project folder as a tree structure with file contents, respecting .gitignore patterns")
     public String listProjectFiles() {
         try (Stream<Path> paths = Files.walk(baseDir)) {
             StringBuilder result = new StringBuilder();
             
             paths
                 .filter(path -> !path.equals(baseDir)) // skip base directory itself
+                .filter(path -> {
+                    String relativePath = baseDir.relativize(path).toString();
+                    return !shouldIgnore(relativePath, gitignorePatterns);
+                })
                 .sorted()
                 .forEach(path -> {
                     String relativePath = baseDir.relativize(path).toString();
@@ -110,8 +217,8 @@ public class FileSystemTool {
                     result.append("\n");
                 });
             
-            // Return a meaningful message if the folder is empty
-            return result.length() == 0 ? "The project folder is empty." : result.toString();
+            // Return a meaningful message if the folder is empty or all files are ignored
+            return result.length() == 0 ? "The project folder is empty or all files are ignored by .gitignore." : result.toString();
         } catch (IOException e) {
             return "Error listing project files: " + e.getMessage();
         }
