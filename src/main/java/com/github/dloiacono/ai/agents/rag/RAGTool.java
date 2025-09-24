@@ -21,16 +21,13 @@ public class RAGTool {
      * This helps agents understand what has been created before and build upon it.
      * 
      * @param query The search query describing what information is needed
-     * @param maxResults Maximum number of results to return (default: 5)
-     * @return A formatted string containing the most relevant information found
+     * @return A formatted string containing the most relevant information found (max 5 results)
      */
     @Tool("Search for relevant information from previously generated project outputs. " +
           "Use this to understand what has been created before, find existing code, " +
-          "architecture decisions, requirements, or any other generated content.")
-    public String searchGeneratedContent(String query, int maxResults) {
-        if (maxResults <= 0) {
-            maxResults = 5;
-        }
+          "architecture decisions, requirements, or any other generated content. Returns up to 5 most relevant results.")
+    public String searchGeneratedContent(String query) {
+        int maxResults = 5; // Fixed to 5 results to avoid method overloading issues
         
         try {
             // Search for similar content using simple text matching
@@ -68,14 +65,6 @@ public class RAGTool {
         } catch (Exception e) {
             return "Error searching generated content: " + e.getMessage();
         }
-    }
-    
-    /**
-     * Searches for relevant information with default max results (5).
-     */
-    @Tool("Search for relevant information from previously generated project outputs with default settings.")
-    public String searchGeneratedContent(String query) {
-        return searchGeneratedContent(query, 5);
     }
     
     /**

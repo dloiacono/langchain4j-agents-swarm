@@ -2,6 +2,7 @@ package com.github.dloiacono.ai.agents.memory;
 
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 
 /**
  * Factory class for creating agent-specific chat memory configurations.
@@ -9,8 +10,7 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
  */
 public class AgentChatMemoryFactory {
     
-    private static final int DEFAULT_MAX_MESSAGES = 10000;
-    private static final PersistentChatMemoryStore SHARED_MEMORY_STORE = new PersistentChatMemoryStore();
+    private static final int DEFAULT_MAX_MESSAGES = 100;
     
     /**
      * Creates a chat memory for the Analyst agent
@@ -20,7 +20,7 @@ public class AgentChatMemoryFactory {
         return MessageWindowChatMemory.builder()
                 .id("analyst")
                 .maxMessages(DEFAULT_MAX_MESSAGES)
-                .chatMemoryStore(SHARED_MEMORY_STORE)
+                .chatMemoryStore(new PersistentChatMemoryStore())
                 .build();
     }
     
@@ -32,7 +32,7 @@ public class AgentChatMemoryFactory {
         return MessageWindowChatMemory.builder()
                 .id("architect")
                 .maxMessages(DEFAULT_MAX_MESSAGES)
-                .chatMemoryStore(SHARED_MEMORY_STORE)
+                .chatMemoryStore(new PersistentChatMemoryStore())
                 .build();
     }
     
@@ -44,7 +44,7 @@ public class AgentChatMemoryFactory {
         return MessageWindowChatMemory.builder()
                 .id("developer")
                 .maxMessages(DEFAULT_MAX_MESSAGES)
-                .chatMemoryStore(SHARED_MEMORY_STORE)
+                .chatMemoryStore(new PersistentChatMemoryStore())
                 .build();
     }
     
@@ -57,7 +57,7 @@ public class AgentChatMemoryFactory {
         return MessageWindowChatMemory.builder()
                 .id(memoryId)
                 .maxMessages(DEFAULT_MAX_MESSAGES)
-                .chatMemoryStore(SHARED_MEMORY_STORE)
+                .chatMemoryStore(new PersistentChatMemoryStore())
                 .build();
     }
     
@@ -71,7 +71,7 @@ public class AgentChatMemoryFactory {
         return MessageWindowChatMemory.builder()
                 .id(memoryId)
                 .maxMessages(maxMessages)
-                .chatMemoryStore(SHARED_MEMORY_STORE)
+                .chatMemoryStore(new PersistentChatMemoryStore())
                 .build();
     }
 }
